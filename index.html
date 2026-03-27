@@ -146,6 +146,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-green{background:linear-gradient(135deg,#15803d,var(--green));color:#fff;box-shadow:0 3px 14px rgba(34,197,94,.3);}
 .btn-green:hover:not(:disabled){box-shadow:0 3px 24px rgba(34,197,94,.6);transform:translateY(-1px);}
 
+/* ── NAV BAR (always visible prev/next) ── */
+.nav-bar{display:flex;gap:8px;justify-content:center;align-items:center;padding:4px 14px 6px;flex-shrink:0;}
+.nav-divider{width:1px;height:24px;background:var(--border);}
+.btn-nav{font-family:'Oswald',sans-serif;font-size:.88rem;letter-spacing:2px;text-transform:uppercase;padding:7px 18px;border:1px solid rgba(255,255,255,.18);border-radius:8px;cursor:pointer;background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);transition:all .2s;}
+.btn-nav:hover:not(:disabled){background:rgba(255,255,255,.12);color:var(--white);border-color:rgba(255,255,255,.35);}
+.btn-nav:disabled{opacity:.25;cursor:not-allowed;}
+.nav-round-label{font-family:'Oswald',sans-serif;font-size:.85rem;letter-spacing:2px;color:rgba(255,255,255,.3);min-width:80px;text-align:center;}
+
 .judge-panel{display:none;padding:7px 14px 10px;flex-shrink:0;}
 .judge-inner{background:var(--surface);border:1px solid rgba(245,197,24,.25);border-radius:14px;padding:13px 16px;text-align:center;animation:bannerIn .4s cubic-bezier(.34,1.56,.64,1);}
 @keyframes bannerIn{from{transform:scale(.85) translateY(10px);opacity:0;}to{transform:none;opacity:1;}}
@@ -157,8 +165,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .buzzer{flex:1;min-width:90px;padding:clamp(11px,2.8vw,18px) 6px;border:none;border-radius:10px;cursor:pointer;font-family:'Oswald',sans-serif;font-size:clamp(.8rem,2.2vw,1.2rem);letter-spacing:2px;text-transform:uppercase;transition:all .15s;}
 .buzzer:active{transform:scale(.97);}
 .buzzer:disabled{opacity:.35;cursor:not-allowed;transform:none!important;}
-
-
 
 .final-screen{display:none;position:fixed;inset:0;z-index:60;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:28px;}
 .final-screen.show{display:flex;}
@@ -186,7 +192,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
   <div class="setup-grid">
 
-    <!-- Number of teams -->
     <div class="field full">
       <label>Number of Teams</label>
       <div class="pill-row">
@@ -198,10 +203,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
-    <!-- Team name inputs (dynamic) -->
     <div id="teamNamesGrid" class="full"></div>
 
-    <!-- Points -->
     <div class="field">
       <label>Points per correct guess</label>
       <select id="pts">
@@ -212,20 +215,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </select>
     </div>
 
-    <!-- Speed -->
     <div class="field">
-      <label>Reveal speed (auto mode)</label>
-      <select id="spd">
-        <option value="3000">Very Slow — 1 every 3 sec</option>
-        <option value="2000" selected>Slow — 1 every 2 sec</option>
-        <option value="1000">Medium — 1 per sec</option>
-        <option value="500">Fast — 2 per sec</option>
-      </select>
+      <label>Reveal speed — seconds per letter</label>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="range" id="spdRange" min="0.2" max="5" step="0.1" value="2"
+          style="flex:1;accent-color:var(--gold);cursor:pointer;"
+          oninput="document.getElementById('spdNum').value=parseFloat(this.value).toFixed(1)">
+        <input type="number" id="spdNum" min="0.2" max="10" step="0.1" value="2.0"
+          style="width:62px;text-align:center;"
+          oninput="document.getElementById('spdRange').value=this.value">
+        <span style="font-size:.75rem;color:rgba(255,255,255,.35);white-space:nowrap;">sec</span>
+      </div>
     </div>
 
     <div class="sdiv"></div>
 
-    <!-- Round entry -->
     <div class="field full">
       <label>Phrase / Word(s) for this Round</label>
       <input id="rPhrase" type="text" placeholder="e.g.  DILWALE DULHANIA LE JAYENGE" style="text-transform:uppercase;">
@@ -247,7 +251,24 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
-    <button class="add-btn" onclick="addRound()">+ Add Round</button>
+    <!-- BULK IMPORT -->
+    <div class="field full">
+      <label>Bulk Import — Paste rounds list</label>
+      <textarea id="bulkInput" rows="4" placeholder="phrase - category (lang) timer&#10;e.g. Pyaaz ke pakode - khaana peena (h) 20&#10;waffles and pancakes - food (e) 15"
+        style="background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;outline:none;resize:vertical;transition:border-color .2s;line-height:1.5;"
+        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+        <button class="add-btn" style="grid-column:unset;flex:1;margin:0;" onclick="bulkImport()">⬆ Import All Lines as Rounds</button>
+        <span id="bulkStatus" style="font-size:.68rem;color:rgba(34,197,94,.8);letter-spacing:1px;min-width:60px;"></span>
+      </div>
+      <div style="font-size:.6rem;color:rgba(255,255,255,.2);letter-spacing:.5px;margin-top:3px;">
+        Format: <em>phrase - category (lang) timer</em> &nbsp;·&nbsp; lang: h / e / h+e &nbsp;·&nbsp; timer in seconds (optional)
+      </div>
+    </div>
+
+    <div class="sdiv"></div>
+
+    <button class="add-btn" onclick="addRound()">+ Add Single Round</button>
     <div class="sdiv"></div>
     <div id="roundsList"></div>
     <div class="sdiv"></div>
@@ -283,8 +304,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="btn btn-ghost" id="btnReveal" onclick="onRevealClick()">Reveal Letter</button>
     <button class="btn btn-gold"  id="btnAuto"   onclick="onAutoClick()">▶ Auto</button>
     <button class="btn btn-ghost" id="btnSkip"   onclick="onSkipClick()">Skip to All</button>
-    <button class="btn btn-green" id="btnNext"   onclick="nextRound()" style="display:none">Next Round →</button>
     <button class="btn btn-ghost" id="btnReset"  onclick="resetGame()">↺ Reset</button>
+  </div>
+
+  <!-- ── PERSISTENT NAV BAR ── -->
+  <div class="nav-bar">
+    <button class="btn-nav" id="btnPrev" onclick="prevRound()">← Prev</button>
+    <span class="nav-round-label" id="navRoundLbl">1 / 1</span>
+    <button class="btn-nav" id="btnNext" onclick="nextRound()">Next →</button>
   </div>
 
   <div class="judge-panel" id="judgePanel">
@@ -311,8 +338,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <div class="buzzer-bar" id="buzzerBar"></div>
 </div>
-
-
 
 <!-- TIME'S UP -->
 <div class="timeup-popup" id="timeupPopup">
@@ -392,6 +417,61 @@ function addRound(){
   renderRoundsList();
 }
 
+// ── BULK IMPORT ───────────────────────────
+function bulkImport(){
+  const raw=document.getElementById('bulkInput').value;
+  if(!raw.trim()){alert('Paste some rounds first!');return;}
+
+  // Each non-empty line is one round.
+  // Format: phrase - category (lang) timer
+  // lang codes: h → Hindi, e → English, h+e / e+h / both → Both
+  // timer is optional trailing integer
+  const lines=raw.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  let added=0,skipped=0;
+
+  for(const line of lines){
+    // Extract optional trailing number (buzz timer)
+    let rest=line;
+    let buzzTimer=0;
+    const timerMatch=rest.match(/\s+(\d+)\s*$/);
+    if(timerMatch){buzzTimer=parseInt(timerMatch[1]);rest=rest.slice(0,rest.length-timerMatch[0].length).trim();}
+
+    // Extract optional (lang) tag at end
+    let lang='English';
+    const langMatch=rest.match(/\(\s*([^)]+?)\s*\)\s*$/i);
+    if(langMatch){
+      const lc=langMatch[1].toLowerCase().replace(/\s/g,'');
+      if(lc==='h'||lc==='hindi') lang='Hindi';
+      else if(lc==='e'||lc==='english') lang='English';
+      else if(lc.includes('+')||lc==='both') lang='Both';
+      rest=rest.slice(0,rest.length-langMatch[0].length).trim();
+    }
+
+    // Split on last ' - ' or first ' - ' to get phrase and category
+    const dashIdx=rest.lastIndexOf(' - ');
+    let phrase,cat;
+    if(dashIdx>0){
+      phrase=rest.slice(0,dashIdx).trim();
+      cat=rest.slice(dashIdx+3).trim()||'General';
+    } else {
+      // No dash — treat whole thing as phrase, use General
+      phrase=rest.trim();
+      cat='General';
+    }
+
+    phrase=phrase.toUpperCase();
+    if(!phrase){skipped++;continue;}
+    G.rounds.push({phrase,cat,lang,buzzTimer});
+    added++;
+  }
+
+  document.getElementById('bulkInput').value='';
+  const s=document.getElementById('bulkStatus');
+  s.textContent=`✓ ${added} added${skipped?' ('+skipped+' skipped)':''}`;
+  setTimeout(()=>s.textContent='',3000);
+  renderRoundsList();
+}
+
 function renderRoundsList(){
   const el=document.getElementById('roundsList');
   if(!G.rounds.length){el.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.22);font-size:.73rem;letter-spacing:1px;padding:8px 0;">No rounds yet — add one above</div>';return;}
@@ -410,7 +490,7 @@ function startGame(){
     G.scores.push(0);
   }
   G.pts=parseInt(document.getElementById('pts').value);
-  G.speed=parseInt(document.getElementById('spd').value);
+  G.speed=Math.round(parseFloat(document.getElementById('spdNum').value||2)*1000)||2000;
   G.rIdx=0;
   buildScoreBar();buildBuzzerBar();
   switchView('gameView');buildPips();loadRound();
@@ -442,14 +522,11 @@ function mkPanel(i){
   const c=TC[i];
   const d=document.createElement('div');
   d.className='score-panel';d.id='sp'+i;
-  d.style.borderColor=c.m;
-  // inject ::before colour via inline style trick using a wrapper
   d.setAttribute('style',`border-color:${c.m};--pbg:${c.bg};`);
   d.innerHTML=`<div class="s-badge" id="b${i}"></div><div class="s-name" id="sn${i}" style="color:${c.m}">${G.teamNames[i]}</div><div class="s-val" id="sv${i}">0</div>`;
   return d;
 }
 
-// inject dynamic ::before for each panel via a style tag
 function injectPanelStyles(){
   let s=document.getElementById('dynStyles');
   if(!s){s=document.createElement('style');s.id='dynStyles';document.head.appendChild(s);}
@@ -479,6 +556,10 @@ function updatePips(){
   const t=`Round ${G.rIdx+1} / ${G.rounds.length}`;
   const rl=document.getElementById('rndLbl');if(rl)rl.textContent=t;
   document.getElementById('topRoundLbl').textContent=t;
+  // Update nav bar label + button states
+  document.getElementById('navRoundLbl').textContent=`${G.rIdx+1} / ${G.rounds.length}`;
+  document.getElementById('btnPrev').disabled = G.rIdx <= 0;
+  document.getElementById('btnNext').disabled = G.rIdx >= G.rounds.length - 1;
 }
 
 // ── LOAD ROUND ───────────────────────────
@@ -496,7 +577,6 @@ function loadRound(){
   document.getElementById('langPill').textContent=r.lang;
   document.getElementById('progFill').style.width='0%';
   document.getElementById('judgePanel').style.display='none';
-  document.getElementById('btnNext').style.display='none';
   document.getElementById('btnAuto').textContent='▶ Auto';
   document.getElementById('btnAuto').disabled=false;
   document.getElementById('btnReveal').disabled=false;
@@ -547,17 +627,13 @@ function updateProgress(){
 }
 
 // ── REVEAL ───────────────────────────────
-// Auto is a self-contained mode. Manual buttons always kill auto first.
-
 function stopAuto(){
-  // Hard-stop the interval and reset auto button state
   if(G.autoTimer){clearInterval(G.autoTimer);G.autoTimer=null;}
   const btn=document.getElementById('btnAuto');
   if(btn){btn.textContent='▶ Auto';btn.classList.remove('btn-active');}
 }
 
 function onRevealClick(){
-  // Manual reveal — always stops auto first
   stopAuto();
   if(G.done)return;
   if(G.oIdx>=G.order.length){setStatus('All letters revealed!');return;}
@@ -568,17 +644,13 @@ function onRevealClick(){
 }
 
 function onAutoClick(){
-  // Toggle auto on/off
   if(G.autoTimer){
-    // Currently running — stop it
     stopAuto();
   } else {
-    // Start auto
     if(G.done)return;
     if(G.oIdx>=G.order.length){setStatus('All letters revealed!');return;}
     document.getElementById('btnAuto').textContent='⏹ Stop Auto';
     G.autoTimer=setInterval(()=>{
-      // Auto never runs while buzzed/paused
       if(G.buzzedBy!==-1)return;
       if(G.done||G.oIdx>=G.order.length){
         stopAuto();
@@ -594,7 +666,6 @@ function onAutoClick(){
 }
 
 function onSkipClick(){
-  // Skip — always stops auto first
   stopAuto();
   if(G.done)return;
   while(G.oIdx<G.order.length) litTile(G.order[G.oIdx++]);
@@ -603,7 +674,7 @@ function onSkipClick(){
 }
 
 // ── BUZZ TIMER HELPERS ───────────────────
-const CIRC = 175.93; // 2π × 28
+const CIRC = 175.93;
 
 function stopBuzzTimer(){
   if(G.buzzTimerInterval){clearInterval(G.buzzTimerInterval);G.buzzTimerInterval=null;}
@@ -617,12 +688,9 @@ function startBuzzTimer(secs){
   wrap.style.display='block';
   num.classList.remove('urgent');
   ring.classList.remove('urgent');
-
   let remaining=secs;
-  // init ring full
   ring.style.strokeDashoffset='0';
   num.textContent=remaining;
-
   G.buzzTimerInterval=setInterval(()=>{
     remaining--;
     const offset=CIRC*(1-(remaining/secs));
@@ -638,16 +706,12 @@ function startBuzzTimer(secs){
 
 function triggerTimeup(){
   const i=G.buzzedBy;
-  // Hide judge panel
   document.getElementById('judgePanel').style.display='none';
-  // Mark badge
   setBadge(i,'⏰ Time Up');
   document.getElementById('sp'+i)?.classList.remove('buzzing','active');
-  // Show TIME'S UP popup
   document.getElementById('timeupSub').textContent=
     `${G.teamNames[i]}'s time ran out — marked incorrect`;
   document.getElementById('timeupPopup').classList.add('show');
-  // Apply wrong logic (without closing popup yet — closeTimeup does that)
   _applyWrong(i);
 }
 
@@ -668,7 +732,6 @@ function buzz(i){
   document.getElementById('judgePanel').style.display='block';
   document.getElementById('sp'+i)?.classList.add('buzzing','active');
   setStatus(`${G.teamNames[i]} buzzed in!`);
-  // Start countdown if this round has a timer
   const secs=G.rounds[G.rIdx]?.buzzTimer||0;
   if(secs>0) startBuzzTimer(secs);
 }
@@ -687,8 +750,6 @@ function markCorrect(){
     document.getElementById('sp'+j)?.classList.remove('buzzing','active');
     const b=document.getElementById('buz'+j);if(b)b.disabled=true;
   }
-  document.getElementById('btnNext').style.display='inline-block';
-  document.getElementById('btnNext').textContent=G.rIdx+1<G.rounds.length?'Next Round →':'🏆 Final Score';
   document.getElementById('btnAuto').disabled=true;
   document.getElementById('btnReveal').disabled=true;
   document.getElementById('btnSkip').disabled=true;
@@ -698,10 +759,8 @@ function markCorrect(){
   launchConfetti(200);
 }
 
-// Shared wrong logic (used by markWrong button AND timer expiry)
 function _applyWrong(i){
   document.getElementById('sp'+i)?.classList.remove('buzzing','active');
-  // Re-enable every team except the one who got it wrong
   for(let j=0;j<G.numTeams;j++){
     if(j!==i){const b=document.getElementById('buz'+j);if(b)b.disabled=false;}
   }
@@ -728,11 +787,20 @@ function resumeFromJudge(){
   setStatus('Resumed — keep going!');
 }
 
-// Removed: toggleAuto, startAuto, clearAuto, skipReveal, togglePause (replaced above)
-function clearAuto(){stopAuto();} // alias for loadRound / goSetup calls
+// ── NEXT / PREV / FINAL ──────────────────
+function nextRound(){
+  stopBuzzTimer();
+  if(G.rIdx+1>=G.rounds.length){showFinal();return;}
+  G.rIdx++;
+  loadRound();
+}
 
-// ── NEXT / FINAL ─────────────────────────
-function nextRound(){G.rIdx++;if(G.rIdx>=G.rounds.length){showFinal();return;}loadRound();}
+function prevRound(){
+  stopBuzzTimer();
+  if(G.rIdx<=0)return;
+  G.rIdx--;
+  loadRound();
+}
 
 function showFinal(){
   stopAuto();
@@ -779,9 +847,8 @@ function launchConfetti(n){
 // ── KEYBOARD ─────────────────────────────
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('gameView').classList.contains('active'))return;
-  // Space/arrow = manual reveal (also stops auto)
   if(e.key===' '||e.key==='ArrowRight'){e.preventDefault();onRevealClick();}
-  // Number keys = buzz team
+  if(e.key==='ArrowLeft'){e.preventDefault();prevRound();}
   const n=parseInt(e.key);if(n>=1&&n<=G.numTeams)buzz(n-1);
 });
 
